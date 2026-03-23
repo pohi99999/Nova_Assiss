@@ -11,7 +11,7 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([
     {
       role: "assistant",
-      content: "Szia Gábor! Atlas vagyok. Mielőtt belevágnánk, hadd mondjam el, hogy átnéztem a Sólyom Daru profilját – lenyűgöző a flotta! Hogy indult a ma reggel, nagy a hajtás Gödöllőn?"
+      content: "Szia! Atlasz vagyok, a személyes AI asszisztensed. Képes vagyok folyamatosan tanulni és a segítségedre lenni. Kérlek, oszd meg velem, milyen témában, vállalkozásban vagy feladatban lehetek a hasznodra!"
     }
   ]);
   const [input, setInput] = useState("");
