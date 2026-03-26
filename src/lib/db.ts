@@ -20,13 +20,16 @@ const MEMORIES_FILE = path.join(DB_DIR, 'memories.json');
 class LocalVectorDB {
   public documents: VectorRecord[] = [];
   public memories: VectorRecord[] = [];
+  private initialized = false;
 
   async init() {
+    if (this.initialized) return;
     try {
       await fs.mkdir(DB_DIR, { recursive: true });
-      
+
       this.documents = await this.loadTable(DOCS_FILE);
       this.memories = await this.loadTable(MEMORIES_FILE);
+      this.initialized = true;
     } catch (error) {
       console.error('Failed to init DB:', error);
     }
