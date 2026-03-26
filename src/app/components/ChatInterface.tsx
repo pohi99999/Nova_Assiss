@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import profile from '../../config/profile.json';
 
 interface ISpeechRecognitionEvent {
   results: { [index: number]: { [index: number]: { transcript: string } } };
@@ -28,7 +29,7 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([
     {
       role: "assistant",
-      content: "Szia! Én vagyok a személyes AI asszisztensed. Képes vagyok tanulni a dokumentumaidból és a beszélgetéseinkből is. Miben segíthetek ma?"
+      content: profile.greeting
     }
   ]);
   const [input, setInput] = useState("");

@@ -1,4 +1,5 @@
 import ChatInterface from "./components/ChatInterface";
+import profile from "../config/profile.json";
 
 export default function Home() {
   return (
@@ -7,7 +8,7 @@ export default function Home() {
       {/* Bal oldali információs sáv - Asztalon látható, mobilon rejtett */}
       <div className="hidden md:flex md:w-1/3 lg:w-1/4 bg-white border-r border-gray-200 flex-col p-8 justify-between shadow-xl z-10">
         <div>
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-3xl font-bold text-white mb-6 shadow-lg">
+          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-3xl font-bold text-white mb-6 shadow-lg" style={{ backgroundColor: profile.accentColor }}>
             A
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Atlasz</h1>
