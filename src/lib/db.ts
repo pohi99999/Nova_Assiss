@@ -36,8 +36,8 @@ class LocalVectorDB {
     try {
       const data = await fs.readFile(filepath, 'utf-8');
       return JSON.parse(data);
-    } catch (err: any) {
-      if (err.code === 'ENOENT') {
+    } catch (err: unknown) {
+      if (err instanceof Error && (err as NodeJS.ErrnoException).code === 'ENOENT') {
         // Create empty file if not exists
         await fs.writeFile(filepath, '[]', 'utf-8');
         return [];

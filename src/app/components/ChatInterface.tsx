@@ -2,9 +2,26 @@
 
 import { useState, useEffect, useRef } from "react";
 
+interface ISpeechRecognitionEvent {
+  results: { [index: number]: { [index: number]: { transcript: string } } };
+}
+
+interface ISpeechRecognition {
+  lang: string;
+  continuous: boolean;
+  onresult: ((event: ISpeechRecognitionEvent) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+}
+
+interface ISpeechRecognitionConstructor {
+  new (): ISpeechRecognition;
+}
+
 interface IWindow extends Window {
-  webkitSpeechRecognition: any;
-  SpeechRecognition: any;
+  webkitSpeechRecognition?: ISpeechRecognitionConstructor;
+  SpeechRecognition?: ISpeechRecognitionConstructor;
 }
 
 export default function ChatInterface() {
@@ -56,7 +73,7 @@ export default function ChatInterface() {
     const recognition = new Recognition();
     recognition.lang = "hu-HU";
     recognition.continuous = false;
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: ISpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
       setIsListening(false);

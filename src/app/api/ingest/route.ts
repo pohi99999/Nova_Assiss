@@ -59,8 +59,9 @@ export async function POST(req: Request) {
       filename: file?.name || 'text-input'
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Ingestion error';
     console.error('Ingestion error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

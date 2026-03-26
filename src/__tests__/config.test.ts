@@ -20,8 +20,8 @@ function testConfig() {
 
 try {
   testConfig();
-} catch (error) {
+} catch (error: unknown) {
   console.error('❌ Config test failed:');
-  console.error(error.message);
+  console.error(error instanceof Error ? error.message : error);
   process.exit(1);
 }

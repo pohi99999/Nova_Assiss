@@ -109,8 +109,9 @@ ${contextText}
 
     return NextResponse.json({ reply });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Szerver hiba';
     console.error('Chat API Hiba:', error);
-    return NextResponse.json({ error: error.message || 'Szerver hiba' }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
