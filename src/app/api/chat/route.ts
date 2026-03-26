@@ -93,7 +93,7 @@ ${contextText}
 
     // 6. Aszinkron háttérfolyamat: Új tények kinyerése a memóriához
     // (Nem blokkolja a válaszadást a felhasználónak)
-    extractAndSaveFact(lastMessage);
+    void extractAndSaveFact(lastMessage);
 
     // 7. OpenAI Válaszgenerálás (Stream: false a stabilitásért)
     const response = await openai.chat.completions.create({
