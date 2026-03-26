@@ -10,15 +10,17 @@ export const maxDuration = 60;
 
 const openai = new OpenAI();
 
-async function extractAndSaveFact(message: string) {
+async function extractAndSaveFact(
+  message: string,
+  source: 'user-extraction' | 'assistant-extraction' = 'user-extraction'
+) {
   try {
-    // LLM hívás a tény kinyerésére
     const extractionResponse = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Elég a kisebb modell a ténykinyeréshez
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: 'Te egy memóriakezelő vagy. Elemezd a következő felhasználói üzenetet. Ha tartalmaz egy új, hosszú távon fontos tényt (pl. felhasználó preferenciája, egy projekt fontos adata, új cégadat, jelszó, PIN, név, stb.), amit érdemes megjegyezni, írd le azt a tényt egyetlen rövid, tényszerű, E/3 személyű mondatban. Ha NINCS benne fontos tény, vagy csak általános csevegés (pl. "Szia", "Hogy vagy?", "Köszi"), válaszolj pontosan a "NINCS" szóval.',
+          content: 'Te egy memóriakezelő vagy. Elemezd a következő üzenetet. Ha tartalmaz egy új, hosszú távon fontos tényt (pl. preferencia, projekt adat, cégadat, jelszó, PIN, név, stb.), amit érdemes megjegyezni, írd le azt a tényt egyetlen rövid, tényszerű, E/3 személyű mondatban. Ha NINCS benne fontos tény, vagy csak általános csevegés (pl. "Szia", "Hogy vagy?", "Köszi", "Rendben"), válaszolj pontosan a "NINCS" szóval.',
         },
         { role: 'user', content: message }
       ],
@@ -34,14 +36,13 @@ async function extractAndSaveFact(message: string) {
         text: fact,
         embedding,
         metadata: {
-          source: 'chat-extraction',
+          source,
           createdAt: new Date().toISOString()
         }
       });
       await db.saveMemories();
-      console.log(`Új tény megtanulva: ${fact}`);
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Hiba a ténykinyerés során:', error);
   }
 }
@@ -89,11 +90,7 @@ ${personalityPrompt}
 ${contextText}
 `;
 
-    // 6. Aszinkron háttérfolyamat: Új tények kinyerése a memóriához
-    // (Nem blokkolja a válaszadást a felhasználónak)
-    void extractAndSaveFact(lastMessage);
-
-    // 7. OpenAI Válaszgenerálás (Stream: false a stabilitásért)
+    // 6. OpenAI Válaszgenerálás (előbb kell, hogy az AI választ is feldolgozhassuk)
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -103,7 +100,13 @@ ${contextText}
       stream: false,
     });
 
-    const reply = response.choices[0].message.content;
+    const reply = response.choices[0].message.content ?? '';
+
+    // 7. Párhuzamos ténykinyerés – háttérben fut, nem blokkolja a választ
+    void Promise.all([
+      extractAndSaveFact(lastMessage, 'user-extraction'),
+      extractAndSaveFact(reply, 'assistant-extraction'),
+    ]);
 
     return NextResponse.json({ reply });
 
