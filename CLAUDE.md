@@ -2,71 +2,114 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project: Atlasz AI Chat
+## Projekt áttekintés
 
-Next.js 15 + FastAPI hibrid alkalmazás. A frontend egy magyar nyelvű RAG-képes AI chat asszisztenst valósít meg (neve: **Atlasz**), a háttérben OpenAI API-val. A Python agent (`agent/`) a Microsoft Agent Framework + AG-UI protokoll implementációja – a projekt szerves része.
+**Atlasz AI Chat** – Next.js 15 + FastAPI hibrid alkalmazás. Magyar nyelvű, RAG-képes AI chat asszisztens OpenAI API-val. A Python agent (`agent/`) a Microsoft Agent Framework + AG-UI protokoll implementációja – a projekt szerves része.
+
+**Aktuális verzió:** v2.0
+**Fő chat végpont:** `/api/chat` (saját RAG pipeline)
+**Legacy végpont:** `/api/copilotkit` (megtartva, de a UI nem használja)
+
+---
 
 ## Parancsok
 
 ```bash
 # Fejlesztés – teljes stack (két terminálban futtatandó)
-npm run dev          # Next.js frontend
+npm run dev          # Next.js frontend (alapértelmezett Next.js port)
 npm run dev:agent    # Python agent (port 8000)
 
 # Alternatív
 npm run dev:ui       # Next.js Turbopack módban
 npm run dev:debug    # Debug loggal
 
-# Build / Lint
+# Build / Lint / TypeScript
 npm run build
 npm run lint
+npx tsc --noEmit     # Csak TypeScript ellenőrzés (gyorsabb mint a build)
 
-# Python agent függőségek
+# Python agent
 cd agent && uv sync
 uv run src/main.py   # Agent manuális indítása
 
-# Tesztelés (nincs teszt-keretrendszer, kézi Node scriptek)
+# Tesztelés (nincs teszt-keretrendszer, kézi tsx scriptek)
 npx tsx src/__tests__/db.test.ts
 npx tsx src/__tests__/config.test.ts
+npx tsx src/__tests__/search.test.ts
 ```
 
-## Architektúra
+---
 
-### Frontend → API Routes (Next.js App Router, `src/app/api/`)
+## Architektúra és adatfolyam
 
-| Route | Funkció |
-|-------|---------|
-| `POST /api/chat` | Fő chat végpont: RAG (dokumentumok + memória), ténykinyerés. Válasz: `gpt-4o`, ténykinyerés: `gpt-4o-mini` |
-| `POST /api/ingest` | Fájl (PDF/TXT/MD/CSV) feltöltése, chunking, embedding, mentés `data/documents.json`-ba |
-| `POST /api/tts` | OpenAI TTS (`tts-1`, Nova hang) – audiót ad vissza |
-| `POST /api/copilotkit` | Alternatív chat végpont (gpt-4o, no-stream) |
-| `GET /api/memories` | Összes kinyert tény listázása (szöveg, forrás, dátum) |
+### POST /api/chat – fő pipeline (src/app/api/chat/route.ts)
 
-### Adat- és memóriaréteg (`src/lib/`)
+```
+1. DB init (idempotens)
+2. Utolsó üzenet embedding → getEmbedding()
+3. RAG keresés → top 3 dokumentum + top 3 memória (cosine similarity)
+4. Web search döntés:
+   - ha maxRagScore < 0.75 → Tavily keresés
+   - ha score OK → LLM intent check (gpt-4o-mini) → időérzékeny? → Tavily
+5. System prompt összeállítás:
+   profile.json adatok + system-prompt.md + RAG kontextus + web eredmény
+6. OpenAI válasz: gpt-4o (stream: false)
+7. Háttérben (void): ténykinyerés user + AI üzenetből (gpt-4o-mini) → memories.json
+```
 
-- **`db.ts`** – `LocalVectorDB` osztály: dokumentumokat (`data/documents.json`) és memóriákat (`data/memories.json`) JSON fájlokban tárol. Cosine similarity alapú keresés. A `db` singleton – az `init()` idempotens.
-- **`embeddings.ts`** – `getEmbedding()` (OpenAI `text-embedding-3-small`), `chunkText()` (1000 karakteres paragrafus-chunker).
-- **`config.ts`** – `src/config/profile.json` betöltése (`AssistantProfile` interfész: név, cég, hang, képességek).
+### API végpontok
 
-### Frontend (`src/app/`)
+| Route | Metódus | Funkció |
+|-------|---------|---------|
+| `/api/chat` | POST | Fő pipeline (ld. fent) |
+| `/api/ingest` | POST | Fájl (PDF/TXT/MD/CSV) chunking + embedding → documents.json |
+| `/api/tts` | POST | OpenAI TTS (`tts-1`, `nova` hang) → audio blob |
+| `/api/memories` | GET | Összes kinyert tény listázása |
+| `/api/copilotkit` | POST | Legacy végpont, gpt-4o, saját system prompt (UI nem használja) |
 
-- **`page.tsx`** – Kétpaneles layout: infósáv + `<ChatInterface />`
-- **`components/ChatInterface.tsx`** – Teljes chat UI: üzenetlista, file upload (`/api/ingest`), STT (böngésző `SpeechRecognition`, `hu-HU`), TTS toggle (`/api/tts`), küldés (`/api/chat`)
+### Könyvtár modulok (src/lib/)
 
-### Python Agent (`agent/`)
+| Fájl | Tartalom |
+|------|---------|
+| `db.ts` | `LocalVectorDB` singleton – dokumentumok + memóriák JSON fájlokban, cosine similarity keresés. `init()` idempotens. |
+| `embeddings.ts` | `getEmbedding()` (OpenAI `text-embedding-3-small`), `chunkText()` (1000 char, paragrafus alapú) |
+| `config.ts` | `profile.json` betöltése → `AssistantProfile`, `getSystemPrompt()` → `system-prompt.md` olvasása |
+| `search.ts` | `searchWeb(query)` (Tavily REST), `shouldSearchWeb(query, score)` – hiba esetén csendesen `''` |
+| `types.ts` | Template maradvány (AG-UI `AgentState`) – nem használja a fő chat |
 
-Microsoft Agent Framework + AG-UI protokoll implementációja. `agent/src/main.py` indítja a FastAPI szervert (port 8000). Az `agent/.env` fájlban kell megadni az OpenAI vagy Azure OpenAI hitelesítőket.
+### Frontend (src/app/)
 
-## Testreszabás
+- **`page.tsx`** – Kétpaneles layout: bal infósáv (desktop) + jobb `<ChatInterface />`; `accentColor` a `profile.json`-ból
+- **`components/ChatInterface.tsx`** – Teljes chat UI:
+  - Induláskor: `GET /api/memories` → ha van emlékezet, köszöntőben listázza
+  - Ha nincs emlékezet: `profile.greeting` jelenik meg
+  - 📎 gomb → `/api/ingest` (fájl feltöltés)
+  - 🎤 gomb → böngésző `SpeechRecognition` (`hu-HU` locale)
+  - 🔊/🔇 toggle → TTS be/ki (`/api/tts` → `nova` hang)
+  - Küldés → `/api/chat` → `{ reply }` JSON válasz
 
-- **`src/config/profile.json`** – Asszisztens neve, cég, slogan, képességek, TTS hang (`voice`), kiemelőszín (`accentColor`), üdvözlőszöveg
-- **`src/config/system-prompt.md`** – Viselkedési irányelvek, RAG-utasítások (szabad szöveges, automatikusan betöltődik minden kérésnél)
+### Python Agent (agent/)
 
-## Környezeti változók
+Microsoft Agent Framework + AG-UI protokoll. `agent/src/main.py` FastAPI szerver (port 8000). Az `/api/copilotkit` route kapcsolódik hozzá. Konfigurálás: `agent/.env`.
 
-Gyökérkönyvtárban `.env.local`:
+---
+
+## Testreszabás – ezeket kell szerkeszteni
+
+| Fájl | Mit állít be |
+|------|-------------|
+| `src/config/profile.json` | Asszisztens neve, cég, slogan, képességek, TTS hang (`voice`), kiemelőszín (`accentColor`), induláskor megjelenő üdvözlőszöveg |
+| `src/config/system-prompt.md` | Viselkedési irányelvek, stílus, RAG-utasítások – szabad szöveges, minden kérésnél automatikusan betöltődik |
+
+---
+
+## Környezeti változók (.env)
+
 ```env
-OPENAI_API_KEY=sk-...
+OPENAI_API_KEY=sk-...          # Kötelező – chat, TTS, embedding, ténykinyerés
+TAVILY_API_KEY=tvly-...        # Web kereséshez (tavily.com, ingyenes tier: 1000/hó)
+GEMINI_API_KEY=...             # Opcionális
+GOOGLE_API_KEY=...             # Opcionális
 ```
 
 `agent/.env`:
@@ -78,13 +121,56 @@ OPENAI_CHAT_MODEL_ID=gpt-4o-mini
 # AZURE_OPENAI_CHAT_DEPLOYMENT_NAME=...
 ```
 
-## Az asszisztens személyisége
-
-Az Atlasz profil forrása: `src/config/profile.json`. A system prompt szövege: `src/config/system-prompt.md` (szerkeszthető). Az `/api/chat/route.ts` ezt kombinálja RAG-kontextussal és memóriával minden kérésnél.
+---
 
 ## Adattárolás
 
-- `data/documents.json` – RAG tudásbázis (feltöltött fájlok vektorjai)
-- `data/memories.json` – Automatikusan kinyert tények a beszélgetésekből
+| Fájl | Tartalom |
+|------|---------|
+| `data/documents.json` | RAG tudásbázis – feltöltött fájlok chunk-jai + embedding vektorok |
+| `data/memories.json` | Automatikusan kinyert tények a beszélgetésekből (user + AI üzenetekből) |
 
-Mindkét fájl runtime jön létre, nincs pre-commit ellenőrzés. A `data/` mappa gitignore-olva van.
+Mindkét fájl runtime jön létre. A `data/` mappa gitignore-olva van.
+
+---
+
+## OpenAI modellek és szerepük
+
+| Feladat | Model |
+|---------|-------|
+| Fő chat válasz | `gpt-4o` |
+| Ténykinyerés (memória) | `gpt-4o-mini` |
+| Web search intent check | `gpt-4o-mini` |
+| TTS | `tts-1`, `nova` hang |
+| Embedding | `text-embedding-3-small` |
+
+---
+
+## Web search logika (src/lib/search.ts)
+
+- Trigger: `maxRagScore < 0.75` VAGY LLM szerint időérzékeny a kérdés
+- Tavily REST API (`fetch`, nincs SDK), top 3 eredmény
+- Hiba / nincs API kulcs → csendes fallback (`''`), nem blokkol
+- Küszöb konstans: `RELEVANCE_THRESHOLD = 0.75` a `search.ts`-ben
+
+---
+
+## Fontos tudnivalók (gotchas)
+
+- **Import kiterjesztések**: Next.js webpack nem kezeli a `.js` ESM importokat – **ne használj `.js` kiterjesztést** az importokban (pl. `from '../lib/db'` és NEM `from '../lib/db.js'`)
+- **`db` singleton**: A `LocalVectorDB` modul szintjén van példányosítva. Az `init()` idempotens – bátran hívható többször.
+- **Ténykinyerés async**: `void Promise.all(...)` – háttérben fut, nem blokkolja a chat választ
+- **`src/lib/types.ts`**: Csak template maradvány (AG-UI `AgentState`), a fő chat pipeline nem használja
+- **`/api/copilotkit`**: Legacy, hardcoded system prompttal – a UI a `/api/chat`-et használja
+
+---
+
+## Elvégzett fejlesztések (v2.0 teljes)
+
+1. White-label konfiguráció (`profile.json`, `config.ts`)
+2. Lokális JSON vektor DB (`db.ts`, cosine similarity)
+3. Fájl ingest API (PDF/TXT/MD/CSV, chunking, embedding)
+4. RAG chat pipeline + automatikus ténykinyerés
+5. OpenAI TTS (Nova hang)
+6. UI frissítés (STT, TTS toggle, file upload, memória-köszöntő)
+7. Tavily web search integráció (RAG relevancia + intent alapú trigger)
