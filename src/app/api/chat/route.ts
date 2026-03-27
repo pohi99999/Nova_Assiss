@@ -1,8 +1,9 @@
 import OpenAI from 'openai';
 import { NextResponse } from 'next/server';
-import { db } from '../../../lib/db.js';
-import { getEmbedding } from '../../../lib/embeddings.js';
-import { config, getSystemPrompt } from '../../../lib/config.js';
+import { db } from '../../../lib/db';
+import { getEmbedding } from '../../../lib/embeddings';
+import { config, getSystemPrompt } from '../../../lib/config';
+import { searchWeb, shouldSearchWeb } from '../../../lib/search';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -70,7 +71,7 @@ export async function POST(req: Request) {
 
     // 4. Állítsuk össze a RAG kontextust
     let contextText = '';
-    
+
     if (relevantDocs.length > 0) {
       contextText += '\n\n### RELEVÁNS DOKUMENTUMOK A TUDÁSBÁZISBÓL:\n';
       contextText += relevantDocs.map(d => `- [${d.metadata?.source || 'ismeretlen'}]: ${d.text}`).join('\n\n');
@@ -79,6 +80,15 @@ export async function POST(req: Request) {
     if (relevantFacts.length > 0) {
       contextText += '\n\n### RELEVÁNS KORÁBBI TÉNYEK (AMIKRE EMLÉKSZEL):\n';
       contextText += relevantFacts.map(f => `- ${f.text}`).join('\n');
+    }
+
+    // 4b. Web keresés: alacsony RAG relevancia VAGY időérzékeny kérdés esetén
+    const maxRagScore = relevantDocs[0]?.score ?? 0;
+    if (await shouldSearchWeb(lastMessage, maxRagScore)) {
+      const webResults = await searchWeb(lastMessage);
+      if (webResults) {
+        contextText += '\n\n### AKTUÁLIS WEB KERESÉS EREDMÉNYE:\n' + webResults;
+      }
     }
 
     // 5. Állítsuk össze a System Prompt-ot a config-ból

@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { config } from '../../../lib/config.js';
+import { config } from '../../../lib/config';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // A hanggenerálás is tarthat tovább

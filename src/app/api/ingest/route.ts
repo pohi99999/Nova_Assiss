@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../../lib/db.js';
-import { getEmbedding, chunkText } from '../../../lib/embeddings.js';
+import { db } from '../../../lib/db';
+import { getEmbedding, chunkText } from '../../../lib/embeddings';
 import pdfParse from 'pdf-parse';
 
 export async function POST(req: Request) {
