@@ -85,22 +85,48 @@ function MemoryModal({ onClose }: MemoryModalProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
     const load = async () => {
       try {
-        const res = await fetch('/api/memories');
+        const res = await fetch('/api/memories', { signal: controller.signal });
         if (!res.ok) return;
         const data = await res.json() as { memories: MemoryItem[] };
         setMemories(data.memories);
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
       } finally {
         setLoading(false);
       }
     };
     void load();
+    return () => controller.abort();
   }, []);
 
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const handleDelete = async (id: string) => {
+    const previous = memories;
     setMemories(prev => prev.filter(m => m.id !== id));
-    await fetch(`/api/memories/${id}`, { method: 'DELETE' });
+    try {
+      const res = await fetch(`/api/memories/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        setMemories(previous);
+      }
+    } catch {
+      setMemories(previous);
+    }
   };
 
   return (
@@ -109,12 +135,16 @@ function MemoryModal({ onClose }: MemoryModalProps) {
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="memory-modal-title"
         className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-slate-900">Megjegyzett tények</h2>
+          <h2 id="memory-modal-title" className="text-base font-semibold text-slate-900">Megjegyzett tények</h2>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-full hover:bg-slate-100"
             aria-label="Bezárás"
