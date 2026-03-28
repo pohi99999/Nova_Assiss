@@ -53,8 +53,8 @@ npx tsx src/__tests__/search.test.ts
    - ha score OK → LLM intent check (gpt-4o-mini) → időérzékeny? → Tavily
 5. System prompt összeállítás:
    profile.json adatok + system-prompt.md + RAG kontextus + web eredmény
-6. OpenAI válasz: gpt-4o (stream: false)
-7. Háttérben (void): ténykinyerés user + AI üzenetből (gpt-4o-mini) → memories.json
+6. OpenAI válasz: gpt-4o (stream: true) → ReadableStream plain text chunkok
+7. Háttérben (void, a stream végén): ténykinyerés user + AI üzenetből (gpt-4o-mini) → memories.json
 ```
 
 ### API végpontok
@@ -77,7 +77,7 @@ npx tsx src/__tests__/search.test.ts
 | `search.ts` | `searchWeb(query)` (Tavily REST), `shouldSearchWeb(query, score)` – hiba esetén csendesen `''` |
 | `types.ts` | Template maradvány (AG-UI `AgentState`) – nem használja a fő chat |
 
-### Frontend (src/app/)
+### Frontend (src/app/ és src/components/)
 
 - **`page.tsx`** – Kétpaneles layout: bal infósáv (desktop) + jobb `<ChatInterface />`; `accentColor` a `profile.json`-ból
 - **`components/ChatInterface.tsx`** – Teljes chat UI:
@@ -86,7 +86,8 @@ npx tsx src/__tests__/search.test.ts
   - 📎 gomb → `/api/ingest` (fájl feltöltés)
   - 🎤 gomb → böngésző `SpeechRecognition` (`hu-HU` locale)
   - 🔊/🔇 toggle → TTS be/ki (`/api/tts` → `nova` hang)
-  - Küldés → `/api/chat` → `{ reply }` JSON válasz
+  - Küldés → `/api/chat` → `ReadableStream` (plain text, chunk-onként) → AI buborék valós időben töltődik
+- **`src/components/`** (`moon.tsx`, `proverbs.tsx`, `weather.tsx`) – CopilotKit starter template maradványok, a jelenlegi UI **nem használja őket**
 
 ### Python Agent (agent/)
 
@@ -159,18 +160,8 @@ Mindkét fájl runtime jön létre. A `data/` mappa gitignore-olva van.
 
 - **Import kiterjesztések**: Next.js webpack nem kezeli a `.js` ESM importokat – **ne használj `.js` kiterjesztést** az importokban (pl. `from '../lib/db'` és NEM `from '../lib/db.js'`)
 - **`db` singleton**: A `LocalVectorDB` modul szintjén van példányosítva. Az `init()` idempotens – bátran hívható többször.
-- **Ténykinyerés async**: `void Promise.all(...)` – háttérben fut, nem blokkolja a chat választ
+- **Streaming válasz**: `/api/chat` `Content-Type: text/plain` stream-et ad vissza (nem JSON). A frontend `ReadableStream` reader-rel chunk-onként olvassa, az AI buborék azonnal frissül. TTS a teljes szöveg megérkezése után indul.
+- **Ténykinyerés async**: `void Promise.all(...)` – a stream lezárása után háttérben fut, nem blokkolja a választ
 - **`src/lib/types.ts`**: Csak template maradvány (AG-UI `AgentState`), a fő chat pipeline nem használja
 - **`/api/copilotkit`**: Legacy, hardcoded system prompttal – a UI a `/api/chat`-et használja
 
----
-
-## Elvégzett fejlesztések (v2.0 teljes)
-
-1. White-label konfiguráció (`profile.json`, `config.ts`)
-2. Lokális JSON vektor DB (`db.ts`, cosine similarity)
-3. Fájl ingest API (PDF/TXT/MD/CSV, chunking, embedding)
-4. RAG chat pipeline + automatikus ténykinyerés
-5. OpenAI TTS (Nova hang)
-6. UI frissítés (STT, TTS toggle, file upload, memória-köszöntő)
-7. Tavily web search integráció (RAG relevancia + intent alapú trigger)
