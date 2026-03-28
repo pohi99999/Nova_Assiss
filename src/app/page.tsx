@@ -6,7 +6,7 @@ export default function Home() {
     <div className="flex flex-col md:flex-row h-screen bg-slate-100 overflow-hidden">
 
       {/* Bal oldalsáv – csak desktopon */}
-      <aside className="hidden md:flex md:w-72 lg:w-80 bg-white border-r border-slate-200 flex-col p-8 justify-between shrink-0">
+      <aside className="hidden md:flex md:w-72 lg:w-80 bg-white border-r border-slate-200 flex-col p-8 justify-between shrink-0" aria-label="Asszisztens információs oldalsáv">
         <div>
           <div
             className="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-6"
@@ -24,7 +24,7 @@ export default function Home() {
                 <span className="text-blue-600 text-sm">🧠</span>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-800">Dinamikus Emlékezet</h3>
+                <h2 className="text-sm font-semibold text-slate-800">Dinamikus Emlékezet</h2>
                 <p className="text-xs text-slate-400 leading-relaxed">Megjegyzi a fontos tényeket a beszélgetésekből.</p>
               </div>
             </div>
@@ -34,7 +34,7 @@ export default function Home() {
                 <span className="text-purple-600 text-sm">📚</span>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-800">Élő Tudásbázis (RAG)</h3>
+                <h2 className="text-sm font-semibold text-slate-800">Élő Tudásbázis (RAG)</h2>
                 <p className="text-xs text-slate-400 leading-relaxed">Tölts fel fájlokat a 📎 gombbal, majd kérdezz róluk.</p>
               </div>
             </div>
@@ -44,7 +44,7 @@ export default function Home() {
                 <span className="text-green-600 text-sm">🗣️</span>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-800">Hang Interakció</h3>
+                <h2 className="text-sm font-semibold text-slate-800">Hang Interakció</h2>
                 <p className="text-xs text-slate-400 leading-relaxed">Diktálj 🎤 gombbal, hallgasd Nova hangján 🔊.</p>
               </div>
             </div>
