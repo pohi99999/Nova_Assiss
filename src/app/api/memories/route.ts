@@ -18,8 +18,8 @@ export async function GET() {
     const memories: MemorySummary[] = db.memories.map((m) => ({
       id: m.id,
       text: m.text,
-      source: (m.metadata?.['source'] as string) ?? 'unknown',
-      createdAt: (m.metadata?.['createdAt'] as string) ?? '',
+      source: typeof m.metadata?.['source'] === 'string' ? m.metadata['source'] : 'unknown',
+      createdAt: typeof m.metadata?.['createdAt'] === 'string' ? m.metadata['createdAt'] : '',
     }));
 
     return NextResponse.json({ memories });
