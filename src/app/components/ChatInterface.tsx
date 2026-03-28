@@ -324,29 +324,73 @@ export default function ChatInterface() {
 
     const userMessage = input.trim();
     setInput("");
-    const newMessages: Message[] = [...messages, { id: crypto.randomUUID(), role: "user", content: userMessage, time: now() }];
+    const newMessages: Message[] = [
+      ...messages,
+      { id: crypto.randomUUID(), role: "user", content: userMessage, time: now() }
+    ];
     setMessages(newMessages);
     setIsLoading(true);
 
+    const aiMessageId = crypto.randomUUID();
+    let aiMessageAdded = false;
+
     try {
-      // API-nak csak role + content kell, time nem
       const apiMessages = newMessages.map(({ role, content }) => ({ role, content }));
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: apiMessages }),
       });
-      if (!res.ok) throw new Error("API hiba");
-      const data = await res.json() as { reply: string };
-      setMessages(prev => [...prev, { id: crypto.randomUUID(), role: "assistant", content: data.reply, time: now() }]);
-      void speakNova(data.reply);
+
+      if (!res.ok || !res.body) throw new Error("API hiba");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullReply = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        fullReply += chunk;
+
+        if (!aiMessageAdded) {
+          aiMessageAdded = true;
+          setIsLoading(false);
+          setMessages(prev => [
+            ...prev,
+            { id: aiMessageId, role: "assistant", content: fullReply, time: now() }
+          ]);
+        } else {
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.id === aiMessageId ? { ...msg, content: fullReply } : msg
+            )
+          );
+        }
+      }
+
+      void speakNova(fullReply);
+
     } catch {
-      setMessages(prev => [...prev, {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: "Sajnálom, hiba történt a válaszadás közben.",
-        time: now()
-      }]);
+      setIsLoading(false);
+      if (aiMessageAdded) {
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === aiMessageId
+              ? { ...msg, content: "Sajnálom, hiba történt a válaszadás közben." }
+              : msg
+          )
+        );
+      } else {
+        setMessages(prev => [...prev, {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: "Sajnálom, hiba történt a válaszadás közben.",
+          time: now()
+        }]);
+      }
     } finally {
       setIsLoading(false);
     }
