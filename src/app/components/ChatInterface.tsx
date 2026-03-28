@@ -6,7 +6,7 @@ import profile from '../../config/profile.json';
 
 interface Message {
   id: string;
-  role: "user" | "assistant" | "system";
+  role: "user" | "assistant";
   content: string;
   time?: string;
 }
@@ -133,7 +133,7 @@ export default function ChatInterface() {
       audio.addEventListener('ended', () => URL.revokeObjectURL(url), { once: true });
       audio.play();
     } catch (err) {
-      console.error('Nova TTS Error:', err);
+      // TTS error handling
     }
   };
 
@@ -174,10 +174,15 @@ export default function ChatInterface() {
           time: now()
         }]);
       } else {
-        alert('Hiba a fájl feltöltésekor: ' + data.error);
+        setMessages(prev => [...prev, {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: `❌ Hiba a fájl feltöltésekor: ${data.error ?? 'Ismeretlen hiba'}`,
+          time: now()
+        }]);
       }
     } catch (err) {
-      console.error(err);
+      // File upload error handling
     } finally {
       setUploading(false);
       if (e.target) e.target.value = '';
