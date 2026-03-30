@@ -33,7 +33,7 @@ async function extractAndSaveFact(
 
     if (fact && fact !== 'NINCS') {
       const embedding = await getEmbedding(fact);
-      db.memories.push({
+      await db.addRecord('memories', {
         id: crypto.randomUUID(),
         text: fact,
         embedding,
@@ -42,7 +42,6 @@ async function extractAndSaveFact(
           createdAt: new Date().toISOString()
         }
       });
-      await db.saveMemories();
     }
   } catch (error: unknown) {
     void error; // Ténykinyerés hiba nem blokkolja a chat választ
@@ -66,8 +65,8 @@ export async function POST(req: Request) {
     const queryEmbedding = await getEmbedding(lastMessage);
 
     // 3. Top 3 dokumentum + top 3 memória
-    const relevantDocs = db.search(queryEmbedding, 'documents', 3);
-    const relevantFacts = db.search(queryEmbedding, 'memories', 3);
+    const relevantDocs = await db.search(queryEmbedding, 'documents', 3);
+    const relevantFacts = await db.search(queryEmbedding, 'memories', 3);
 
     // 4. RAG kontextus összeállítása
     let contextText = '';
@@ -84,10 +83,14 @@ export async function POST(req: Request) {
 
     // 4b. Web keresés döntés
     const maxRagScore = relevantDocs[0]?.score ?? 0;
+    let webResultsText = '';
     if (await shouldSearchWeb(lastMessage, maxRagScore)) {
       const webResults = await searchWeb(lastMessage);
       if (webResults) {
+        webResultsText = webResults;
         contextText += '\n\n### AKTUÁLIS WEB KERESÉS EREDMÉNYE:\n' + webResults;
+        // Mentjük a webes tényeket is a háttérben
+        void extractAndSaveFact(`Webes keresési eredmények a következőhöz: "${lastMessage}": ${webResults}`, 'assistant-extraction');
       }
     }
 

@@ -1,71 +1,65 @@
-# Atlasz Projekt - Fejlesztési és Rendszerdokumentáció (v1.3 - Final Stable)
+# GEMINI.md – Nova Irodai Asszisztens v3.0
 
-**Dátum:** 2026. január 9.
-**Státusz:** ÉLES, STABIL (Production Ready)
-**URL:** https://chat-v1-atlasz.vercel.app/
-**Verzió:** 1.3 (Biztonsági Mód / Safe Mode)
+Ez a fájl tartalmazza a projekt aktuális állapotát, a legutóbbi fejlesztéseket és a jövőbeli irányelveket.
 
-## 1. Vezetői Összefoglaló
-A projekt célja egy "Atlasz" nevű AI stratégiai tanácsadó ügynök implementálása a Sólyom Daru Kft. számára. A fejlesztés során a hangsúly a stabilitásra, a mobilhasználatra és a természetes (hangalapú) interakcióra került. A korábbi instabil, streamelés-alapú megoldásokat egy robusztus, kérés-válasz alapú architektúrára cseréltük a Vercel környezeti sajátosságai miatt.
+## 🚀 Projekt Áttekintés
+**Nova** egy proaktív, magyar nyelvű AI irodai asszisztens a **Sólyom Daru Kft.** számára. Next.js 15 alapú, OpenAI integrációval, RAG képességgel és dinamikus memóriával rendelkezik.
 
----
-
-## 2. Rendszerarchitektúra
-
-### Frontend (Kliens oldal)
-- **Keretrendszer:** Next.js 15 (App Router) + React 18.
-- **Stílus:** Tailwind CSS v4 (Reszponzív Design).
-- **Kommunikáció:** Hagyományos `fetch` API (JSON), manuális állapotkezelés.
-- **Hangfunkciók:**
-  - **Bemenet (STT):** Web Speech API (`webkitSpeechRecognition`) - Magyar nyelvű diktálás.
-  - **Kimenet (TTS):** Web Speech API (`speechSynthesis`) - Magyar nyelvű felolvasás.
-- **Stabilitás:** `suppressHydrationWarning` engedélyezve a `layout.tsx`-ben a konzolhibák elkerülésére.
-
-### Backend (Szerver oldal)
-- **Runtime:** Node.js (Vercel Serverless Function).
-- **API Végpont:** `src/app/api/copilotkit/route.ts`
-- **AI Motor:** OpenAI `gpt-4o` modell.
-- **Logika:**
-  - **Nem-streamelő válasz:** A szerver megvárja a teljes választ, és egy JSON objektumban küldi vissza. Ez kiküszöböli a hálózati szakadásokat és a "gépel, de nem ír semmit" hibákat.
-  - **Prompt Engineering:** "Atlasz Master Prompt" beégetve a kódba (Persona, Cégadatok, 3 napos menetrend).
+**Aktuális verzió:** v3.0 (2026.03.30)
+**Alapértelmezett port:** 3005 (konfliktuskerülés miatt)
 
 ---
 
-## 3. Elvégzett Fejlesztések és Hibajavítások Története
+## ✅ Legutóbbi Fejlesztések (v3.0)
 
-### A. Kritikus Helyreállítások
-1.  **Duplikációk törlése:** A `route.ts` fájl korábban kétszer tartalmazta a kódot, ami szintaktikai hibát okozott.
-2.  **SDK Stabilizálás:** A `npm audit fix --force` által okozott verzió-robbanás (ai SDK v6) után visszaálltunk a stabil `ai` v4 és `openai` v4 kombinációra.
-3.  **Prompt Szintaxis:** A rendszerutasításban (System Prompt) lévő Markdown kódblokkok (` ``` `) "összetörték" a TypeScript fordítót. Ezt a formázás eltávolításával orvosoltuk.
+### 1. Rebranding és Persona
+- Az "Atlasz" nevet mindenhol lecseréltük **Nova**-ra.
+- Új irodavezetői személyiség: barátságos, proaktív, feladat-orientált.
+- Frissített `profile.json` és `system-prompt.md`.
 
-### B. Funkcionális Fejlesztések
-1.  **Vercel AI SDK Kivezetése (Frontend):** A `useChat` hook instabilitása miatt saját, egyedi chat logikát írtunk (`ChatInterface.tsx`), ami közvetlenül kezeli a `messages` tömböt.
-2.  **Hangintegráció:** Hozzáadtuk a 🎤 (Mikrofon) és 🔊 (Hangszóró) gombokat.
-3.  **Mobil Optimalizálás:** A `page.tsx` reszponzívvé tétele (mobilon teljes képernyős chat, desktopon osztott képernyő).
+### 2. Architektúra Tisztítás
+- A felesleges Python `agent/` mappát eltávolítottuk (a Next.js API-k stabilabbak).
+- Töröltük a nem használt demó komponenseket (`weather`, `moon`, `proverbs`).
+- Eltávolítottuk a zavaró, lassú natív `sqlite3` függőséget a Windows-os kompatibilitási hibák miatt.
 
-### C. Build Config (Vészhelyzeti Beállítások)
-A `next.config.ts`-ben engedélyeztük a:
-- `ignoreDuringBuilds` (ESLint): Hogy a kódformázási hibák ne állítsák meg a deployt.
-- `ignoreBuildErrors` (TypeScript): Hogy a függőségek közötti típus-ütközések ne akadályozzák az élesítést.
+### 3. Adatkezelés és Memória
+- **Dinamikus Memória:** A Tavily webes keresések eredményeit Nova mostantól azonnal "tényként" rögzíti a memóriájába.
+- **SQLite-Ready Interfész:** A `db.ts` teljesen aszinkron lett, felkészítve a későbbi SQL átállásra, jelenleg stabil JSON FileDB alapon fut (Docker perzisztenciával).
+- **Chat History:** Megvalósult a beszélgetések mentése, listázása és visszatöltése (Threads API).
+
+### 4. Modern UI és UX
+- **Reszponzív Sidebar:** Bal oldali sáv a korábbi beszélgetéseknek.
+- **Tudásbázis Kezelő:** Új modal felület a feltöltött dokumentumok kezeléséhez.
+- **Info Modal:** Mobilon is elérhető névjegy az asszisztensről.
+- **Mobilbarát Navigáció:** Adaptív fejléc és optimalizált beviteli mező.
+
+### 5. Telepíthetőség
+- **Docker & Docker Compose:** Kész konfiguráció a könnyű hostoláshoz.
+- **E2E Tesztek:** Playwright tesztcsomag beállítva az alapfunkciók (chat, history, UI) ellenőrzésére.
+
+---
+
+## 📊 Jelenlegi Állapot: TEST-READY
+A rendszer funkcionálisan kész az irodai tesztelésre.
+
+- **Frontend:** ✅ Működőképes, modern, reszponzív.
+- **API (Chat/RAG):** ✅ Stabil, aszinkron, tanulóképes.
+- **Adattárolás:** ✅ JSON FileDB (data/ mappában), Docker volume támogatással.
+- **Keresés:** ✅ Tavily integráció aktív.
+- **Hang:** ✅ TTS (OpenAI Nova) és STT (Browser) elérhető.
 
 ---
 
-## 4. Karbantartási Útmutató (Jules & Fejlesztők részére)
-
-**FONTOS:** Ez a projekt "Safe Mode"-ban fut. Ha módosítasz rajta, kövesd ezeket a szabályokat:
-
-1.  **NE frissítsd a csomagokat automatikusan:** A `npm audit fix` tönkreteheti a `ai` és `openai` csomagok törékeny egyensúlyát. Maradj a jelenlegi verzióknál (`package.json`).
-2.  **Backend Logika:** Ha módosítod a `route.ts`-t, maradj a **`stream: false`** beállításnál, kivéve ha 100%-ig biztos vagy a Vercel streamelési beállításaiban. A jelenlegi JSON válasz a legbiztosabb.
-3.  **Prompt Módosítás:** Ha szerkeszted a `SYSTEM_PROMPT` változót, **KERÜLD** a template stringen belüli backtick (` ` ` `) használatát, vagy escape-eld őket (` \` `), különben a build elhasal.
-4.  **Python Agent:** A gyökérben lévő `agent/` mappa **NEM** része az éles rendszernek. Ne próbáld meg bekötni, hacsak nem akarsz teljes architektúraváltást.
-
-## 5. Tesztelés
-- **Lokális futtatás:** `npm run dev` -> http://localhost:3000
-- **Éles teszt:** https://chat-v1-atlasz.vercel.app/
-- **Ellenőrzés:**
-  - "Warm Start" működik? (Atlasz tudja, hogy Gödöllőn vagyunk?)
-  - Válasz megjelenik? (Nem csak "gondolkodik"?)
-  - Hang működik?
+## ⚠️ Technikai Tapasztalatok (Gotchas)
+1. **Port Konfliktus:** A Brunella Core (port 3000) miatt a projektet a **3005**-ös portra költöztettük.
+2. **SQLite Windows-on:** A natív `sqlite3` driver gyakran okoz build timeoutot/deadlockot Windows fejlesztői környezetben. A tiszta aszinkron FileDB jelenleg megbízhatóbb a gyors fejlesztéshez.
+3. **Standalone Build:** A `next.config.ts` tartalmazza az `output: 'standalone'` beállítást a hatékony Docker build érdekében.
 
 ---
-*Generálta: Gemini CLI (v0.6.0)*
+
+## 🛠️ Parancsok
+```bash
+npm run dev          # Indítás a 3005-ös porton
+npm run test:e2e     # E2E tesztek futtatása (Playwright)
+docker-compose up -d # Éles indítás konténerben
+```

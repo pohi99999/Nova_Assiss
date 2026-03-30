@@ -7,8 +7,8 @@ function testConfig() {
     throw new Error('Config object is missing!');
   }
 
-  if (config.name !== 'Atlasz') {
-    throw new Error(`Expected name "Atlasz", but got "${config.name}"`);
+  if (config.name !== 'Nova') {
+    throw new Error(`Expected name "Nova", but got "${config.name}"`);
   }
 
   if (config.voice !== 'nova') {

@@ -1,23 +1,33 @@
 import { db } from '../lib/db.js';
 
-async function testDatabase() {
-  console.log('Testing vector database loading...');
+async function testDB() {
+  console.log('Testing database connection...');
   
   await db.init();
   
-  if (!db.documents) {
-    throw new Error('Documents table missing!');
+  const docs = await db.getTable('documents');
+  const memories = await db.getTable('memories');
+  const threads = await db.getThreads();
+
+  if (!Array.isArray(docs)) {
+    throw new Error('db.documents must return an array');
   }
 
-  if (!db.memories) {
-    throw new Error('Memories table missing!');
+  if (!Array.isArray(memories)) {
+    throw new Error('db.memories must return an array');
+  }
+  
+  if (!Array.isArray(threads)) {
+    throw new Error('db.threads must return an array');
   }
 
   console.log('✅ Database test passed!');
 }
 
-testDatabase().catch(err => {
+try {
+  await testDB();
+} catch (error: unknown) {
   console.error('❌ Database test failed:');
-  console.error(err.message);
+  console.error(error instanceof Error ? error.message : error);
   process.exit(1);
-});
+}

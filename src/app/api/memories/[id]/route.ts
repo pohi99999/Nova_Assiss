@@ -12,13 +12,13 @@ export async function DELETE(
     await db.init();
     const { id } = await params;
 
-    const index = db.memories.findIndex((m) => m.id === id);
-    if (index === -1) {
+    const memories = await db.getMemories();
+    const exists = memories.some((m) => m.id === id);
+    if (!exists) {
       return NextResponse.json({ error: 'Nem található' }, { status: 404 });
     }
 
-    db.memories.splice(index, 1);
-    await db.saveMemories();
+    await db.deleteRecord('memories', id);
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {

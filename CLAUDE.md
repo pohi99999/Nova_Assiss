@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Projekt áttekintés
 
-**Atlasz AI Chat** – Next.js 15 + FastAPI hibrid alkalmazás. Magyar nyelvű, RAG-képes AI chat asszisztens OpenAI API-val. A Python agent (`agent/`) a Microsoft Agent Framework + AG-UI protokoll implementációja – a projekt szerves része.
+**Nova AI Chat** – Next.js 15 + FastAPI hibrid alkalmazás. Magyar nyelvű, RAG-képes AI chat asszisztens OpenAI API-val. A Python agent (`agent/`) a Microsoft Agent Framework + AG-UI protokoll implementációja – a projekt szerves része.
 
 **Aktuális verzió:** v2.0
 **Fő chat végpont:** `/api/chat` (saját RAG pipeline)

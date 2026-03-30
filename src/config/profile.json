@@ -1,13 +1,14 @@
 {
-  "name": "Atlasz",
+  "name": "Nova",
   "company": "Sólyom Daru Kft.",
-  "slogan": "AI Stratégiai Tanácsadó",
+  "slogan": "Proaktív Irodai Asszisztens",
   "capabilities": [
-    "Continuous Learning",
-    "Knowledge Base",
-    "Web Search"
+    "Folyamatos Tanulás",
+    "Céges Tudásbázis",
+    "Webes Keresés",
+    "Hangvezérlés"
   ],
   "voice": "nova",
-  "accentColor": "#2563eb",
-  "greeting": "Szia! Én vagyok a személyes AI asszisztensed. Képes vagyok tanulni a dokumentumaidból és a beszélgetéseinkből is. Miben segíthetek ma?"
+  "accentColor": "#0ea5e9",
+  "greeting": "Szia! Nova vagyok, a Sólyom Daru Kft. irodai asszisztense. Készen állok segíteni a dokumentumok kezelésében, e-mailek fogalmazásában vagy bármilyen irodai feladatban. Miben segíthetek ma?"
 }

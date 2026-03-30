@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(cd:*)",
+      "Bash(cat \"G:/Brunella/.000_PROJEKTEK/005_Chat_Agent_Nova \\(cég botja\\)/Nova_assisst/firebase.json\")",
+      "Bash(head -30 \"G:/Brunella/.000_PROJEKTEK/005_Chat_Agent_Nova \\(cég botja\\)/Nova_assisst/src/components/moon.tsx\")",
+      "Bash(head -10 \"G:/Brunella/.000_PROJEKTEK/005_Chat_Agent_Nova \\(cég botja\\)/Nova_assisst/src/components/proverbs.tsx\")"
+    ]
+  }
+}

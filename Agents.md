@@ -1,6 +1,6 @@
 # Jules Agent - Fejlesztési és Tesztelési Irányelvek
 
-Ez a dokumentum utasításokat tartalmaz **Jules** (és más fejlesztő ügynökök) számára az **Atlasz (Sólyom Daru Chatbot)** projekt karbantartásához, teszteléséhez és továbbfejlesztéséhez.
+Ez a dokumentum utasításokat tartalmaz **Jules** (és más fejlesztő ügynökök) számára az **Nova (Sólyom Daru Irodai Asszisztens)** projekt karbantartásához, teszteléséhez és továbbfejlesztéséhez.
 
 ## 1. Környezet és Stack
 

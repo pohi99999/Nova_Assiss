@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@copilotkit/runtime"],
+  output: 'standalone',
+  serverExternalPackages: ["@copilotkit/runtime", "sqlite3"],
   outputFileTracingIncludes: {
     '/api/chat': ['./src/config/system-prompt.md'],
   },

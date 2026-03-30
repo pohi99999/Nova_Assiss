@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       if (chunk.trim().length < 10) continue; // Skip too small chunks
 
       const embedding = await getEmbedding(chunk);
-      db.documents.push({
+      await db.addRecord('documents', {
         id: crypto.randomUUID(),
         text: chunk,
         embedding,
@@ -49,9 +49,6 @@ export async function POST(req: Request) {
       });
       addedChunks++;
     }
-
-    // Save to disk
-    await db.saveDocuments();
 
     return NextResponse.json({ 
       success: true, 

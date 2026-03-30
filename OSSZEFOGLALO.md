@@ -126,7 +126,7 @@ jules_session_15190526786132876767_fix-vercel-crash-react-19-1519052678613287676
 ## 🎯 Alkalmazás Funkciók
 
 ### ✅ Működő Funkciók
-1. **Atlas AI Chatbot** - Magyar nyelvű AI asszisztens
+1. **Nova AI Asszisztens** - Magyar nyelvű AI asszisztens
 2. **Igényfelmérő Beszélgetés** - 3 fázisú strukturált folyamat
 3. **CopilotKit Integráció** - Sidebar chat UI
 4. **OpenAI GPT-4o** - Intelligens válaszok

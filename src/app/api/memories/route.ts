@@ -14,8 +14,9 @@ export interface MemorySummary {
 export async function GET() {
   try {
     await db.init();
+    const rawMemories = await db.getMemories();
 
-    const memories: MemorySummary[] = db.memories.map((m) => ({
+    const memories: MemorySummary[] = rawMemories.map((m) => ({
       id: m.id,
       text: m.text,
       source: typeof m.metadata?.['source'] === 'string' ? m.metadata['source'] : 'unknown',
