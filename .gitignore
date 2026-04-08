@@ -62,3 +62,11 @@ desktop.ini
 .firebase/logs/
 # git worktrees
 .worktrees/
+
+# runtime adatok (embeddings, memóriák, chat szálak — ne kerüljenek a repóba)
+/data/*.json
+/data/*.db
+/data/*.db-shm
+/data/*.db-wal
+/test-results/
+/playwright-report/
