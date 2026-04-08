@@ -21,6 +21,7 @@ interface ThreadSummary {
 interface DocumentInfo {
   source: string;
   count: number;
+  lastAdded: string;
 }
 
 // Browser Speech types

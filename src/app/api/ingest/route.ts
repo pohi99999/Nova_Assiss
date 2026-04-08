@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
 import { getEmbedding, chunkText } from '../../../lib/embeddings';
-import pdfParse from 'pdf-parse';
+// pdf-parse lib import: elkerüli a modul-szintű tesztfájl-betöltést (ismert bug)
+import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 
 export async function POST(req: Request) {
   try {
